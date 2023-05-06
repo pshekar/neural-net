@@ -8,26 +8,17 @@ import random
 from statistics import stdev
 
 cur_path = os.path.dirname(__file__)
-file_name = 'hw3_house_votes_84.csv'
-# file_name = 'hw3_wine.csv'
+# file_name = 'hw3_house_votes_84.csv'
+file_name = 'hw3_wine.csv'
 
 def main(regularization, net_shape, k_folds):
     with open(f'{cur_path}/datasets/{file_name}', newline='') as csvfile:
         data = csvfile.read().splitlines()
-        if file_name == 'hw3_house_votes_84.csv' or file_name == 'weather_data.csv':
-            categories = np.array(data[0].split(','))
-        else:
-            categories = np.array(data[0].split('\t'))
-        data = data[1:]
-        # strip the classification from the categories
-        if file_name == 'hw3_wine.csv':
-            categories = categories[1:]
-        else:
-            categories = categories[:-1]
         # testing_categories = deepcopy(categories)
         # testing_accuracy = 0
         # testing_precision = 0
         # testing_recall = 0
+        data = data[1:]
         data_set = []
         for row in data:
             if file_name == 'hw3_house_votes_84.csv':
@@ -49,10 +40,10 @@ def main(regularization, net_shape, k_folds):
         # stratified cross validation
         weights = set_weights(net_shape)
         # for i in range(k_folds):
-        training_set, testing_set = stratified_kfold(data_set, k_folds, 0)
+        # training_set, testing_set = stratified_kfold(data_set, k_folds, 0)
         expected_outputs = []
         if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
-            classifications = training_set[:, -1:]
+            classifications = data_set[:, -1:]
             for row in classifications:
                 output = np.zeros(2)
                 if row == 0:
@@ -61,7 +52,7 @@ def main(regularization, net_shape, k_folds):
                     output[1] = 1
                 expected_outputs.append(output)
         elif file_name == 'hw3_wine.csv':
-            classifications = training_set[:, 1:]
+            classifications = data_set[:, :1]
             for row in classifications:
                 output = np.zeros(3)
                 if row == 1:
@@ -71,11 +62,41 @@ def main(regularization, net_shape, k_folds):
                 else:
                     output[2] = 1
                 expected_outputs.append(output)
+        if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
+            training_set = data_set[:, :-1]
+        elif file_name == 'hw3_wine.csv':
+            training_set = data_set[:, 1:]
+            training_set = normalize(training_set)
+            # training_set = training_set / training_set.max(axis=0)
+        test(weights, training_set, expected_outputs)
+        final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
+        test(final_weights, training_set, expected_outputs)
 
-        training_set = training_set[:, :-1]
-        back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
 
-        
+def normalize(data_set):
+    for column in range(len(data_set[0])):
+        a_max = float('-inf')
+        a_min = float('inf')
+        for row in range(len(data_set)):
+            a_max = max(a_max, data_set[row][column])
+            a_min = min(a_min, data_set[row][column])
+        for i in range(len(data_set)):
+            data_set[i][column] = (data_set[i][column] - a_min) / (a_max - a_min)
+    return data_set
+
+def test(weights, data_set, expected_outputs):
+    correct = 0
+    for i in range(len(data_set)):
+        output, _ = forward_propogate(weights, data_set[i])
+        # print(output)
+        argmax = np.argmax(output)
+        # print(argmax)
+        expected_argmax = np.argmax(expected_outputs[i])
+        # print(expected_outputs[i])
+        # print(expected_argmax)
+        if expected_argmax == argmax:
+            correct += 1 
+    print(correct / len(data_set))
 
 def stratified_kfold(data, k, test):
     classes = {}
@@ -162,48 +183,50 @@ def back_propogate(weights, inputs, expected_outputs, net_shape, regularization)
     gradients = []
     for i in range(len(weights)):
         gradients.append(np.zeros(np.array(weights_copy[i]).shape))
-    for k in range(len(inputs)):
-        deltas = []
-        output, outputs = forward_propogate(weights, inputs[k])
-        print('back')
-        output_delta = output - expected_outputs[k]
-        print(f'output_delta: {np.array([np.array(output_delta)])=}')
-        deltas.append(np.array([np.array(output_delta)]))
-        for i in range(len(net_shape) - 2):
-            idx = len(net_shape) - i - 2
-            # print(idx)
-            # print(f'{np.array(weights[idx]).T=}')
-            # print(f'{deltas[i]=}')
-            layer_delta = np.matmul(np.array(weights[idx]).T, deltas[i].T)
-            layer_delta = np.multiply(layer_delta, np.array([outputs[idx]]).T)
-            layer_delta = np.multiply(layer_delta, np.array([np.subtract(1,outputs[idx])]).T)
-            layer_delta = layer_delta[1:]
-            deltas.append(layer_delta.T)
-        print(f'{deltas=}')
+
+    for _ in range(1000):
+        for k in range(len(inputs)):
+            deltas = []
+            output, outputs = forward_propogate(weights, inputs[k])
+            # print('back')
+            output_delta = output - expected_outputs[k]
+            # print(f'output_delta: {np.array([np.array(output_delta)])=}')
+            deltas.append(np.array([np.array(output_delta)]))
+            for i in range(len(net_shape) - 2):
+                idx = len(net_shape) - i - 2
+                # print(idx)
+                # print(f'{np.array(weights[idx]).T=}')
+                # print(f'{deltas[i]=}')
+                layer_delta = np.matmul(np.array(weights[idx]).T, deltas[i].T)
+                layer_delta = np.multiply(layer_delta, np.array([outputs[idx]]).T)
+                layer_delta = np.multiply(layer_delta, np.array([np.subtract(1,outputs[idx])]).T)
+                layer_delta = layer_delta[1:]
+                deltas.append(layer_delta.T)
+            # print(f'{deltas=}')
+            for i in range(len(net_shape)-1):
+                idx = len(net_shape) - i - 2
+                # print(idx)
+                output = np.array([np.array(outputs[idx])])
+                # print(f'gradient: {np.matmul(deltas[i].T, output)=}')
+                gradients[idx] = np.add(gradients[idx], np.matmul(deltas[i].T, output))
+
         for i in range(len(net_shape)-1):
             idx = len(net_shape) - i - 2
-            # print(idx)
-            output = np.array([np.array(outputs[idx])])
-            # print(f'gradient: {np.matmul(deltas[i].T, output)=}')
-            gradients[idx] = np.add(gradients[idx], np.matmul(deltas[i].T, output))
+            p = np.multiply(regularization, weights[idx])
+            # set first column to zeros
+            p[:, 0] =  0
+            gradients[idx] = (gradients[idx] + p) / len(inputs)
+        # print(f'{gradients=}')
+        for i in range(len(net_shape)-1):
+            idx = len(net_shape) - i - 2
+            weights[idx] = weights[idx] - (np.multiply(1, gradients[idx]))
 
-    for i in range(len(net_shape)-1):
-        idx = len(net_shape) - i - 2
-        p = np.multiply(regularization, weights[idx])
-        # set first column to zeros
-        p[:, 0] =  0
-        gradients[idx] = (gradients[idx] + p) / len(inputs)
-    print(f'{gradients=}')
-    for i in range(len(net_shape)-1):
-        idx = len(net_shape) - i - 2
-        weights[idx] = weights[idx] - (np.multiply(1, gradients[idx]))
+    return weights
 
 
 def benchmark1(regularization, net_shape):    
     inputs = [[0.13000], [.42000]]
     expected_outputs = [[0.9000], [.23000]]
-    input2 = [.42000]
-    expected_output2 = [.23000]
     # weights = set_weights(inputs, net_shape)
     weights = [[[0.40000,  0.10000], [0.30000,  0.20000  ]], [[0.70000,  0.50000,  0.60000]]]
     output = back_propogate(weights, inputs, expected_outputs, net_shape, regularization)
@@ -239,5 +262,6 @@ if __name__ == '__main__':
     # net_shape = [2, 4, 3, 2]
     # benchmark2(regularization, net_shape)
     k_folds = 10
-    net_shape = [16, 10, 5, 3, 2]
+    # net_shape = [16, 10, 10, 10, 2]
+    net_shape = [13, 10, 10, 10, 3]
     main(regularization, net_shape, k_folds)
