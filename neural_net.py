@@ -43,7 +43,7 @@ def main(regularization, net_shape, k_folds):
             training_set, testing_set = stratified_kfold(data_set, k_folds, i)
             expected_outputs = []
             if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
-                classifications = data_set[:, -1:]
+                classifications = training_set[:, -1:]
                 for row in classifications:
                     output = np.zeros(2)
                     if row == 0:
@@ -52,7 +52,7 @@ def main(regularization, net_shape, k_folds):
                         output[1] = 1
                     expected_outputs.append(output)
             elif file_name == 'hw3_wine.csv':
-                classifications = data_set[:, :1]
+                classifications = training_set[:, :1]
                 for row in classifications:
                     output = np.zeros(3)
                     if row == 1:
@@ -63,14 +63,15 @@ def main(regularization, net_shape, k_folds):
                         output[2] = 1
                     expected_outputs.append(output)
             if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
-                training_set = data_set[:, :-1]
+                training_set = training_set[:, :-1]
+                testing_set = testing_set[:, :-1]
             elif file_name == 'hw3_wine.csv':
-                training_set = data_set[:, 1:]
+                training_set = training_set[:, 1:]
+                testing_set = testing_set[:, 1:]
             if file_name == 'hw3_wine.csv' or file_name == 'hw3_cancer.csv':
                 training_set = normalize(training_set)
-            test(weights, training_set, expected_outputs)
             final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
-            testing_accuracy, testing_precision, testing_recall = test(final_weights, training_set, expected_outputs)
+            testing_accuracy, testing_precision, testing_recall = test(final_weights, testing_set, expected_outputs)
             accuracy += testing_accuracy
             precision += testing_precision
             recall += testing_recall
@@ -218,8 +219,7 @@ def test(weights, data_set, expected_outputs):
             testing_recall = 0
         else:
             testing_recall = true_pos/(true_pos + false_neg)
-    print(f'accuracy: {correct / len(data_set)}')
-    print(f'testing set accuracy: {testing_accuracy}')
+
     return testing_accuracy, testing_precision, testing_recall
 
 def stratified_kfold(data, k, test):
@@ -323,7 +323,7 @@ def back_propogate(weights, inputs, expected_outputs, net_shape, regularization,
     if benchmark:
         loops = 1
     else:
-        loops = 500
+        loops = 250
     for _ in range(loops):
         for k in range(len(inputs)):
             if benchmark:
@@ -442,8 +442,8 @@ if __name__ == '__main__':
 
 
     # MAIN FUNCTION
-    k_folds = 1
-    regularization = 0
+    k_folds = 10
+    regularization = 0.25
     # HOUSE_VOTES
     net_shape = [16, 10, 10, 10, 2]
     # WINE
