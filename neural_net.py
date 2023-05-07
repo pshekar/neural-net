@@ -8,8 +8,9 @@ import random
 from statistics import stdev
 
 cur_path = os.path.dirname(__file__)
-# file_name = 'hw3_house_votes_84.csv'
-file_name = 'hw3_wine.csv'
+file_name = 'hw3_house_votes_84.csv'
+# file_name = 'hw3_wine.csv'
+# file_name = 'hw3_cancer.csv'
 
 def main(regularization, net_shape, k_folds):
     with open(f'{cur_path}/datasets/{file_name}', newline='') as csvfile:
@@ -35,37 +36,56 @@ def main(regularization, net_shape, k_folds):
         data_set = np.array(data_set)
         # stratified cross validation
         weights = set_weights(net_shape)
-        # for i in range(k_folds):
-        # training_set, testing_set = stratified_kfold(data_set, k_folds, 0)
-        expected_outputs = []
-        if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
-            classifications = data_set[:, -1:]
-            for row in classifications:
-                output = np.zeros(2)
-                if row == 0:
-                    output[0] = 1
-                else:
-                    output[1] = 1
-                expected_outputs.append(output)
-        elif file_name == 'hw3_wine.csv':
-            classifications = data_set[:, :1]
-            for row in classifications:
-                output = np.zeros(3)
-                if row == 1:
-                    output[0] = 1
-                elif row == 2:
-                    output[1] = 1
-                else:
-                    output[2] = 1
-                expected_outputs.append(output)
-        if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
-            training_set = data_set[:, :-1]
-        elif file_name == 'hw3_wine.csv':
-            training_set = data_set[:, 1:]
-            training_set = normalize(training_set)
-        test(weights, training_set, expected_outputs)
-        final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
-        test(final_weights, training_set, expected_outputs)
+        accuracy = 0
+        precision = 0
+        recall = 0
+        for i in range(k_folds):
+            training_set, testing_set = stratified_kfold(data_set, k_folds, i)
+            expected_outputs = []
+            if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
+                classifications = data_set[:, -1:]
+                for row in classifications:
+                    output = np.zeros(2)
+                    if row == 0:
+                        output[0] = 1
+                    else:
+                        output[1] = 1
+                    expected_outputs.append(output)
+            elif file_name == 'hw3_wine.csv':
+                classifications = data_set[:, :1]
+                for row in classifications:
+                    output = np.zeros(3)
+                    if row == 1:
+                        output[0] = 1
+                    elif row == 2:
+                        output[1] = 1
+                    else:
+                        output[2] = 1
+                    expected_outputs.append(output)
+            if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
+                training_set = data_set[:, :-1]
+            elif file_name == 'hw3_wine.csv':
+                training_set = data_set[:, 1:]
+            if file_name == 'hw3_wine.csv' or file_name == 'hw3_cancer.csv':
+                training_set = normalize(training_set)
+            test(weights, training_set, expected_outputs)
+            final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
+            testing_accuracy, testing_precision, testing_recall = test(final_weights, training_set, expected_outputs)
+            accuracy += testing_accuracy
+            precision += testing_precision
+            recall += testing_recall
+
+        accuracy = accuracy / k_folds
+        precision = precision / k_folds
+        recall = recall / k_folds
+        if precision == 0 and recall == 0:
+            f1 = 0
+        else:
+            f1 = (2 * precision * recall)/(precision + recall)
+        print(f'testing set accuracy: {accuracy}')
+        print(f'testing set precision: {precision}')
+        print(f'testing set recall: {recall}')
+        print(f'testing set f1 score: {f1}')
 
 
 def normalize(data_set):
@@ -81,17 +101,126 @@ def normalize(data_set):
 
 def test(weights, data_set, expected_outputs):
     correct = 0
+    true_pos = 0
+    true_pos_1 = 0
+    true_pos_2 = 0
+    true_pos_3 = 0
+    true_neg = 0
+    true_neg_1 = 0
+    true_neg_2 = 0
+    true_neg_3 = 0
+    false_pos = 0
+    false_pos_1 = 0
+    false_pos_2 = 0
+    false_pos_3 = 0
+    false_neg = 0
+    false_neg_1 = 0
+    false_neg_2 = 0
+    false_neg_3 = 0
+    class_1 = 0
+    class_2 = 0
+    class_3 = 0
     for i in range(len(data_set)):
         output, _ = forward_propogate(weights, data_set[i])
-        # print(output)
         argmax = np.argmax(output)
-        # print(argmax)
         expected_argmax = np.argmax(expected_outputs[i])
-        # print(expected_outputs[i])
-        # print(expected_argmax)
         if expected_argmax == argmax:
             correct += 1 
+        if file_name == 'hw3_wine.csv':
+            if expected_argmax == 0:
+                class_1 += 1
+                if argmax == 0:
+                    true_pos_1 += 1
+                    true_neg_2 += 1
+                    true_neg_3 += 1
+                elif argmax == 1:
+                    false_neg_1 += 1
+                    false_pos_2 += 1
+                    true_neg_3 += 1
+                else:
+                    false_neg_1 += 1
+                    true_neg_2 += 1
+                    false_pos_3 += 1
+            elif expected_argmax == 1:
+                class_2 += 1
+                if argmax == 0:
+                    false_pos_1 += 1
+                    false_neg_2 += 1
+                    true_neg_3 += 1
+                elif argmax == 1:
+                    true_neg_1 += 1
+                    true_pos_2 += 1
+                    true_neg_3 += 1
+                else:
+                    true_neg_1 += 1
+                    false_neg_2 += 1
+                    false_pos_3 += 1
+            else:
+                class_3 += 1
+                if argmax == 0:
+                    false_pos_1 += 1
+                    true_neg_2 += 1
+                    false_neg_3 += 1
+                elif argmax == 1:
+                    true_neg_1 += 1
+                    false_pos_2 += 1
+                    false_neg_3 += 1
+                else:
+                    true_neg_1 += 1
+                    true_neg_2 += 1
+                    true_pos_3 += 1
+        else:
+            if argmax == expected_argmax:
+                if argmax == 0:
+                    true_pos += 1
+                else:
+                    true_neg += 1
+            else:
+                if expected_argmax == 0:
+                    false_neg += 1
+                else:
+                    false_pos += 1  
+    if file_name == 'hw3_wine.csv':
+        if true_pos_1 == 0 and false_pos_1 == 0:
+            precision_1 = 0
+        else:
+            precision_1 = true_pos_1/(true_pos_1 + false_pos_1)
+        if true_pos_1 == 0 and false_neg_1 == 0:
+            recall_1 = 0
+        else:
+            recall_1 = true_pos_1/(true_pos_1 + false_neg_1)
+        if true_pos_2 == 0 and false_pos_2 == 0:
+            precision_2 = 0
+        else:
+            precision_2 = true_pos_2/(true_pos_2 + false_pos_2)
+        if true_pos_2 == 0 and false_neg_2 == 0:
+            recall_2 = 0
+        else:
+            recall_2 = true_pos_2/(true_pos_2 + false_neg_2)
+        if true_pos_3 == 0 and false_pos_3 == 0:
+            precision_3 = 0
+        else:
+            precision_3 = true_pos_3/(true_pos_3 + false_pos_3)
+        if true_pos_3 == 0 and false_neg_3 == 0:
+            recall_3 = 0
+        else:
+            recall_3 = true_pos_3/(true_pos_3 + false_neg_3)
+        testing_accuracy = (true_pos_1 + true_pos_2 + true_pos_3)/len(data_set)
+        testing_precision = (precision_1 + precision_2 + precision_3)/3
+        testing_recall = (recall_1 + recall_2 + recall_3)/3
+    else:
+        testing_accuracy = (true_pos + true_neg)/len(data_set)
+        if true_pos == 0 and false_pos == 0:
+            testing_precision = 0
+        else:
+            testing_precision = true_pos/(true_pos + false_pos)
+        if true_pos == 0 and false_neg == 0:
+            testing_recall = 0
+        else:
+            testing_recall = true_pos/(true_pos + false_neg)
     print(f'accuracy: {correct / len(data_set)}')
+    print(f'testing set accuracy: {testing_accuracy}')
+    return testing_accuracy, testing_precision, testing_recall
 
 def stratified_kfold(data, k, test):
     classes = {}
@@ -194,7 +323,7 @@ def back_propogate(weights, inputs, expected_outputs, net_shape, regularization,
     if benchmark:
         loops = 1
     else:
-        loops = 1000
+        loops = 500
     for _ in range(loops):
         for k in range(len(inputs)):
             if benchmark:
@@ -300,14 +429,25 @@ def benchmark2(regularization, net_shape):
 
 
 if __name__ == '__main__':
+    # BACKPROP_EXAMPLE 1
     # regularization = 0
     # net_shape = [1, 2, 1]
     # benchmark1(regularization, net_shape)
-    regularization = 0.25
-    net_shape = [2, 4, 3, 2]
-    benchmark2(regularization, net_shape)
-    k_folds = 10
-    # regularization = 0
-    # net_shape = [16, 10, 10, 10, 2]
+    
+    
+    # BACKPROP_EXAMPLE 2
+    # regularization = 0.25
+    # net_shape = [2, 4, 3, 2]
+    # benchmark2(regularization, net_shape)
+
+
+    # MAIN FUNCTION
+    k_folds = 1
+    regularization = 0
+    # HOUSE_VOTES
+    net_shape = [16, 10, 10, 10, 2]
+    # WINE
     # net_shape = [13, 10, 10, 10, 3]
-    # main(regularization, net_shape, k_folds)
+    # CANCER
+    # net_shape = [9, 5, 5, 2]
+    main(regularization, net_shape, k_folds)
