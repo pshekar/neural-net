@@ -63,6 +63,7 @@ def main(regularization, net_shape, k_folds):
         elif file_name == 'hw3_wine.csv':
             training_set = data_set[:, 1:]
             training_set = normalize(training_set)
+        test(weights, training_set, expected_outputs)
         final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
         test(final_weights, training_set, expected_outputs)
 
@@ -90,7 +91,7 @@ def test(weights, data_set, expected_outputs):
         # print(expected_argmax)
         if expected_argmax == argmax:
             correct += 1 
-    print(correct / len(data_set))
+    print(f'accuracy: {correct / len(data_set)}')
 
 def stratified_kfold(data, k, test):
     classes = {}
@@ -190,38 +191,53 @@ def back_propogate(weights, inputs, expected_outputs, net_shape, regularization,
     for i in range(len(weights)):
         gradients.append(np.zeros(np.array(weights_copy[i]).shape))
 
-    for _ in range(1000):
+    if benchmark:
+        loops = 1
+    else:
+        loops = 1000
+    for _ in range(loops):
         for k in range(len(inputs)):
+            if benchmark:
+                print(f'Computing gradients based on training instance {k+1}')
             deltas = []
-            output, outputs = forward_propogate(weights, inputs[k], benchmark)
-            # print('back')
+            output, outputs = forward_propogate(weights, inputs[k])
             output_delta = output - expected_outputs[k]
-            # print(f'output_delta: {np.array([np.array(output_delta)])=}')
+            if benchmark:
+                print(f'delta{len(net_shape)}: {output_delta}')
             deltas.append(np.array([np.array(output_delta)]))
             for i in range(len(net_shape) - 2):
                 idx = len(net_shape) - i - 2
-                # print(idx)
-                # print(f'{np.array(weights[idx]).T=}')
-                # print(f'{deltas[i]=}')
                 layer_delta = np.matmul(np.array(weights[idx]).T, deltas[i].T)
                 layer_delta = np.multiply(layer_delta, np.array([outputs[idx]]).T)
                 layer_delta = np.multiply(layer_delta, np.array([np.subtract(1,outputs[idx])]).T)
                 layer_delta = layer_delta[1:]
+                if benchmark:
+                    print(f'delta{len(net_shape)-i-1}: {layer_delta.T}')
                 deltas.append(layer_delta.T)
-            # print(f'{deltas=}')
             for i in range(len(net_shape)-1):
                 idx = len(net_shape) - i - 2
                 # print(idx)
                 output = np.array([np.array(outputs[idx])])
-                # print(f'gradient: {np.matmul(deltas[i].T, output)=}')
+                if benchmark:
+                    print(f'Gradients of Theta{idx+1} based on training instance {k+1}:')
+                    print(f'{np.matmul(deltas[i].T, output)}')
+                    print()
                 gradients[idx] = np.add(gradients[idx], np.matmul(deltas[i].T, output))
 
+        if benchmark:
+            print(f'The entire training set has been processes. Computing the average (regularized) gradients:')
         for i in range(len(net_shape)-1):
             idx = len(net_shape) - i - 2
             p = np.multiply(regularization, weights[idx])
             # set first column to zeros
             p[:, 0] =  0
             gradients[idx] = (gradients[idx] + p) / len(inputs)
+        
+        if benchmark:
+            for i in range(len(net_shape)-1):
+                print(f'Final regularized gradients of Theta{i+1}:')
+                print(f'{gradients[i]}')
+                print()
         # print(f'{gradients=}')
         for i in range(len(net_shape)-1):
             idx = len(net_shape) - i - 2
@@ -252,6 +268,9 @@ def benchmark1(regularization, net_shape):
     regularized = regularize(weights, inputs, regularization)
     regularized_cost = costs + regularized
     print(f'Final (regularized) cost, J, based on the complete training set: {regularized_cost}')
+    print()
+    print(f'Running backpropagation')
+    back_propogate(weights, inputs, expected_outputs, net_shape, regularization, True)
 
 def benchmark2(regularization, net_shape):
     inputs = [[0.32000, 0.68000], [0.83000, 0.02000]]
@@ -275,17 +294,20 @@ def benchmark2(regularization, net_shape):
     regularized = regularize(weights, inputs, regularization)
     regularized_cost = costs + regularized
     print(f'Final (regularized) cost, J, based on the complete training set: {regularized_cost}')
+    print()
+    print(f'Running backpropagation')
+    back_propogate(weights, inputs, expected_outputs, net_shape, regularization, True)
 
 
 if __name__ == '__main__':
     # regularization = 0
     # net_shape = [1, 2, 1]
     # benchmark1(regularization, net_shape)
-    # regularization = 0.25
-    # net_shape = [2, 4, 3, 2]
-    # benchmark2(regularization, net_shape)
+    regularization = 0.25
+    net_shape = [2, 4, 3, 2]
+    benchmark2(regularization, net_shape)
     k_folds = 10
-    regularization = 0
+    # regularization = 0
     # net_shape = [16, 10, 10, 10, 2]
-    net_shape = [13, 10, 10, 10, 3]
-    main(regularization, net_shape, k_folds)
+    # net_shape = [13, 10, 10, 10, 3]
+    # main(regularization, net_shape, k_folds)
