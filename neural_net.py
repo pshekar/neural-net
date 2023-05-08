@@ -27,7 +27,7 @@ def main(regularization, net_shape, k_folds):
                 if file_name == 'hw3_cancer.csv':
                     arr = row.split('\t')
                     for i in range(len(arr)):
-                        arr[i] = int(float(arr[i]))
+                        arr[i] = float(arr[i])
                 else:
                     arr = row.split('\t')
                     for i in range(len(arr)):
@@ -70,6 +70,7 @@ def main(regularization, net_shape, k_folds):
                 testing_set = testing_set[:, 1:]
             if file_name == 'hw3_wine.csv' or file_name == 'hw3_cancer.csv':
                 training_set = normalize(training_set)
+                testing_set = normalize(testing_set)
             final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
             testing_accuracy, testing_precision, testing_recall = test(final_weights, testing_set, expected_outputs)
             accuracy += testing_accuracy
@@ -84,8 +85,8 @@ def main(regularization, net_shape, k_folds):
         else:
             f1 = (2 * precision * recall)/(precision + recall)
         print(f'testing set accuracy: {accuracy}')
-        print(f'testing set precision: {precision}')
-        print(f'testing set recall: {recall}')
+        # print(f'testing set precision: {precision}')
+        # print(f'testing set recall: {recall}')
         print(f'testing set f1 score: {f1}')
 
 
@@ -224,7 +225,7 @@ def test(weights, data_set, expected_outputs):
 
 def stratified_kfold(data, k, test):
     classes = {}
-    if file_name == 'hw3_house_votes_84.csv' or file_name == 'weather_data':
+    if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
         file_index = -1
     else:
         file_index = 0
@@ -257,7 +258,7 @@ def stratified_kfold(data, k, test):
         if i != test:
             testing_data = testing_data + folds[i]
 
-    return np.array(testing_data), np.array(folds[i])
+    return np.array(testing_data), np.array(folds[test])
 
 
 def set_weights(net_shape):
@@ -323,7 +324,7 @@ def back_propogate(weights, inputs, expected_outputs, net_shape, regularization,
     if benchmark:
         loops = 1
     else:
-        loops = 250
+        loops = 500
     for _ in range(loops):
         for k in range(len(inputs)):
             if benchmark:
@@ -443,11 +444,11 @@ if __name__ == '__main__':
 
     # MAIN FUNCTION
     k_folds = 10
-    regularization = 0.25
+    regularization = 0
     # HOUSE_VOTES
-    net_shape = [16, 10, 10, 10, 2]
+    net_shape = [16, 8, 8, 8, 2]
     # WINE
-    # net_shape = [13, 10, 10, 10, 3]
+    # net_shape = [13, 16, 16, 16, 16, 3]
     # CANCER
-    # net_shape = [9, 5, 5, 2]
+    # net_shape = [9, 16, 16, 16, 16, 2]
     main(regularization, net_shape, k_folds)

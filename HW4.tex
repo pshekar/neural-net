@@ -151,10 +151,74 @@ The two benchmark files we provide (\emph{backprop\_example1.txt} and \emph{back
 \begin{enumerate}
     \item Train a neural network and evaluate it using the stratified cross-validation technique discussed in class. You should train neural networks using different values for the regularization parameter, $\lambda$, and using different architectures. You can decide which architectures you will evaluate. As an example, consider testing networks with 1, 2, 3, and 4 hidden layers, and with various numbers of neurons per layer: e.g., 2, 4, 8, 16.
     \item For each trained neural network (i.e., for each combination of architecture and regularization that you tested), you should measure the resulting model's accuracy and F1 score. 
-    \item Based on these experiments, you should create, for each dataset and for each of the metrics described above, a table summarizing the corresponding results (i.e., you should show the value of each performance metric for each type of neural network that you tested, on both datasets). \textbf{You should test \textit{at least} 6 neural network architectures on each dataset}.
-    \item Discuss (on a high level) what contributed the most to improving performance: changing the regularization parameter; adding more layers; having deeper networks with many layers but few neurons per layer? designing networks with few layers but many neurons per layer? Discuss any patterns that you may have encountered. Also, discuss whether there is a point where constructing and training more ``sophisticated''/complex networks---i.e., larger networks---no longer improves performance (or worsens performance).
-    \item Based on the analyses above,  discuss which neural network architecture you would select if you had to deploy such a classifier in real life. Explain your reasoning.     
-    \item After identifying the best neural network architecture for each one of the datasets, train it once again on the corresponding dataset and create a learning curve where the $y$ axis shows the network's performance ($J$) on a test set, and where the $x$ axis indicates the number of training samples given to the network. This graph intuitively represents something like this: after showing 5 training examples to the network, what is its performance $J$ on the test set? After showing 10 training examples to the network, what is its performance $J$ on the test set? If the network's parameters and architecture are well-adjusted, this graph should indicate that the network's performance improves as the number of training examples grows; in particular, that $J$ \textit{decreases} as a function of the number of training instances presented to the network. Please also report the step size value, $\alpha$, you used when training this network.
+    \item Based on these experiments, you should create, for each dataset and for each of the metrics described above, a table summarizing the corresponding results (i.e., you should show the value of each performance metric for each type of neural network that you tested, on both datasets). \textbf{You should test \textit{at least} 6 neural network architectures on each dataset}. \\ \\
+    
+    
+\HIGHLIGHT{As described in the assignment, I used stratified cross-validation to train and evaluate the neural network with 10 folds. I then varied the regularization parameter and used a couple of different architectures to get the information necessary. The following is a table of the results of tests with six different architectures for the congressional house votes data:} \\
+
+\begin{tabular}{|c|c|c|c|c|c|}
+\hline
+\# hidden layers & neurons per layer & regularization & accuracy & F1 \\
+\hline
+1 & 2 & 0 & 0.942016317 & 0.953241031 \\
+\hline
+2 & 4 & 0.25 & 0.9494172494 & 0.9605262438 \\
+\hline
+2 & 8 & 0 & 0.9673076923 & 0.9734459316 \\
+\hline
+3 & 8 & 0.25 & 0.9604895105 & 0.9676671313 \\
+\hline
+3 & 16 & 0 & 0.9744172494 & 0.979330492 \\
+\hline
+4 & 16 & 0.25 & 0.9559440559 & 0.9650607226 \\
+\hline
+\end{tabular} \\ \\
+
+
+\HIGHLIGHT{The following is a table of the results of tests with six different architectures for the wine data:}
+
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\# hidden layers & neurons per layer & regularization & accuracy & F1 \\
+\hline
+1 & 2 & 0 & 0.9755555556 & 0.9773730578 \\
+\hline
+2 & 4 & 0.25 & 0.9755555556 & 0.9769738115 \\
+\hline
+2 & 8 & 0 & 0.9866666667 & 0.9868969435 \\
+\hline
+3 & 8 & 0.25 & 0.9755555556 & 0.9769738115 \\
+\hline
+3 & 16 & 0 & 0.9811111111 & 0.9817357663 \\
+\hline
+4 & 16 & 0.25 & 0.9644444444 & 0.9680486829 \\
+\hline
+\end{tabular} \\ \\
+    
+    
+    
+    \item Discuss (on a high level) what contributed the most to improving performance: changing the regularization parameter; adding more layers; having deeper networks with many layers but few neurons per layer? designing networks with few layers but many neurons per layer? Discuss any patterns that you may have encountered. Also, discuss whether there is a point where constructing and training more ``sophisticated''/complex networks---i.e., larger networks---no longer improves performance (or worsens performance). \\
+    
+\HIGHLIGHT{The stopping criterion I decided to use was to stop after a predefined $k$ iterations. I chose $k=500$ iterations as I tested a few different numbers and thought that it would be the best number of iterations to do. Trying 250 iterations seemed to still have a bit too much variability in the resulting accuracy and F1 scores. Trying 1000 iterations seemed to always result in about the same accuracy and F1, so in between was the best result.} \\
+
+\HIGHLIGHT{In general, I believe that a mix of the right number of layers and neurons per layer was the best architecture for the neural network. Increasing the number of layers generally helped the accuracy and F1 scores of the data being tested. However, too many layers ended with a resulting loss in both accuracy and F1. The same thing was true for the number of neurons per layer. I found that the best results was usually with 2-3 layers and 8 neurons per layer.} \\
+
+\HIGHLIGHT{Testing different regularization parameters did not seem to change the data much or at all. I believe this is because the number of attributes in the data set. If there were a lot more attributes then the regularization parameter would have had a much greater impact.} \\
+
+\HIGHLIGHT{There is a point where training more "sophisticated" or complex networks would no longer improve performance. If we over complicate the neural network, it can very easily begin overfitting for a specific training set, leading to questionable results on the testing set. This can inevitably lead to stagnant or even worse performance compared to networks that are much simpler in architecture.} \\
+
+    
+    \item Based on the analyses above,  discuss which neural network architecture you would select if you had to deploy such a classifier in real life. Explain your reasoning. \\ \\
+    
+    
+\HIGHLIGHT{The neural network architecture I would choose to deploy a real life classifier would be one with 3 layers and 8 neurons per layer. The reason I would choose this architecture is because it most consistently gave me the best results when I was testing. I feel as though a fewer number of layers would be too few and would hinder performance since the neural net wouldn't be "learning" as much, and similarly too many layers would hinder performance since the neural network would be "learning" too much, resulting in overfitting and underfitting. Following the same vein, I believe that 8 neurons per hidden layer is ideal for our test cases since we don't have too many attributes that we are working with. Having too few or too many neurons would lead to a similar scenario that would leave us with potentially bad results compared to a more ideal architecture.} \\
+   
+    
+    \item After identifying the best neural network architecture for each one of the datasets, train it once again on the corresponding dataset and create a learning curve where the $y$ axis shows the network's performance ($J$) on a test set, and where the $x$ axis indicates the number of training samples given to the network. This graph intuitively represents something like this: after showing 5 training examples to the network, what is its performance $J$ on the test set? After showing 10 training examples to the network, what is its performance $J$ on the test set? If the network's parameters and architecture are well-adjusted, this graph should indicate that the network's performance improves as the number of training examples grows; in particular, that $J$ \textit{decreases} as a function of the number of training instances presented to the network. Please also report the step size value, $\alpha$, you used when training this network. \\
+    
+    
+\HIGHLIGHT{}    
+    
 
     \item Although this last step/task is not required, we recommend that you train the network using the mini-batch gradient descent approach. You can manually select and adjust the mini-batch size that you would like to use. Training a neural network in this way significantly accelerates the training process.
     
@@ -181,6 +245,28 @@ Implement the vectorized form of backpropagation. As previously mentioned, this 
 
 \noindent \HIGHLIGHT{(Extra Points \#2: 13 Points)} 
 Analyze a third dataset: the \textbf{Breast Cancer Dataset}. The goal, here, is to classify whether tissue removed via a biopsy indicates whether a person may or may not have breast cancer. There are 699 instances in this dataset. Each instance is described by 9 \textit{numerical} attributes, and there are 2 classes. You should present the same analyses and graphs as discussed above. This dataset can be found in the same zip file as the two main datasets.
+
+\HIGHLIGHT{The table for the cancer data is presented below:}
+
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\# hidden layers & neurons per layer & regularization & accuracy & F1 \\
+\hline
+1 & 2 & 0 & 0.9684453782 & 0.9755773195 \\
+\hline
+2 & 4 & 0.25 & 0.9627310924 & 0.9712480878 \\
+\hline
+2 & 8 & 0 & 0.9641596639 & 0.9723526295 \\
+\hline
+3 & 8 & 0.25 & 0.9641596639 & 0.9723973625 \\
+\hline
+3 & 16 & 0 & 0.9627310924 & 0.9717680641 \\
+\hline
+4 & 16 & 0.25 & 0.9669747899 & 0.9746223514 \\
+\hline
+\end{tabular} \\
+
+
 
 \noindent \HIGHLIGHT{(Extra Points \#3: 13 Points)}    
 Analyze a fourth, more challenging dataset: the \textbf{Contraceptive Method Choice Dataset}. The goal, here, is to predict the type of contraceptive method used by a person based on many attributes describing that person. This dataset is more challenging because it combines \textit{both numerical and categorical attributes}. There are 1473 instances in this dataset. Each instance is described by 9 attributes, and there are 3 classes. The dataset can be downloaded \href{https://archive.ics.uci.edu/ml/datasets/Contraceptive+Method+Choice}{here}. You should present the same analyses and graphs discussed above.
