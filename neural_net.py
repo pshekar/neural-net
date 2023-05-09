@@ -1,10 +1,7 @@
 from copy import deepcopy
-import csv
 from math import sqrt, log2, floor
-import matplotlib.pyplot as plt
 import numpy as np
 import os
-import random
 from statistics import stdev
 
 cur_path = os.path.dirname(__file__)
@@ -40,7 +37,16 @@ def main(regularization, net_shape, k_folds):
         precision = 0
         recall = 0
         for i in range(k_folds):
+            # for regularized cost
+            # split = int(len(data_set) * .7)
+            # end = 5
+            # while end <= split:
             training_set, testing_set = stratified_kfold(data_set, k_folds, i)
+            # 1 fold puts everything in testing set, so we split it
+            # np.random.shuffle(testing_set)
+            # training_set = testing_set[:end]
+            # testing_set = testing_set[split:]
+            # end += 5
             expected_outputs = []
             if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
                 classifications = training_set[:, -1:]
@@ -62,17 +68,41 @@ def main(regularization, net_shape, k_folds):
                     else:
                         output[2] = 1
                     expected_outputs.append(output)
+
+            expected_test_outputs = []
+            if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
+                classifications = testing_set[:, -1:]
+                for row in classifications:
+                    output = np.zeros(2)
+                    if row == 0:
+                        output[0] = 1
+                    else:
+                        output[1] = 1
+                    expected_test_outputs.append(output)
+            elif file_name == 'hw3_wine.csv':
+                classifications = testing_set[:, :1]
+                for row in classifications:
+                    output = np.zeros(3)
+                    if row == 1:
+                        output[0] = 1
+                    elif row == 2:
+                        output[1] = 1
+                    else:
+                        output[2] = 1
+                    expected_test_outputs.append(output)
+
             if file_name == 'hw3_house_votes_84.csv' or file_name == 'hw3_cancer.csv':
                 training_set = training_set[:, :-1]
                 testing_set = testing_set[:, :-1]
             elif file_name == 'hw3_wine.csv':
                 training_set = training_set[:, 1:]
                 testing_set = testing_set[:, 1:]
+
             if file_name == 'hw3_wine.csv' or file_name == 'hw3_cancer.csv':
                 training_set = normalize(training_set)
                 testing_set = normalize(testing_set)
             final_weights = back_propogate(weights, training_set, expected_outputs, net_shape, regularization)
-            testing_accuracy, testing_precision, testing_recall = test(final_weights, testing_set, expected_outputs)
+            testing_accuracy, testing_precision, testing_recall = test(final_weights, testing_set, expected_test_outputs)
             accuracy += testing_accuracy
             precision += testing_precision
             recall += testing_recall
@@ -98,10 +128,10 @@ def normalize(data_set):
             a_max = max(a_max, data_set[row][column])
             a_min = min(a_min, data_set[row][column])
         for i in range(len(data_set)):
-            data_set[i][column] = (data_set[i][column] - a_min) / (a_max - a_min)
+            data_set[i][column] = float((data_set[i][column] - a_min) / (a_max - a_min))
     return data_set
 
-def test(weights, data_set, expected_outputs):
+def test(weights, testing_set, expected_outputs):
     correct = 0
     true_pos = 0
     true_pos_1 = 0
@@ -122,10 +152,13 @@ def test(weights, data_set, expected_outputs):
     class_1 = 0
     class_2 = 0
     class_3 = 0
-    for i in range(len(data_set)):
-        output, _ = forward_propogate(weights, data_set[i])
+    costs = 0
+    for i in range(len(testing_set)):
+        output, _ = forward_propogate(weights, testing_set[i])
         argmax = np.argmax(output)
         expected_argmax = np.argmax(expected_outputs[i])
+        cost = cost_fn(expected_outputs[i], output)
+        costs += cost
         if expected_argmax == argmax:
             correct += 1 
         if file_name == 'hw3_wine.csv':
@@ -181,7 +214,11 @@ def test(weights, data_set, expected_outputs):
                 if expected_argmax == 0:
                     false_neg += 1
                 else:
-                    false_pos += 1  
+                    false_pos += 1 
+    costs = costs / len(testing_set)
+    regularized = regularize(weights, testing_set, regularization)
+    regularized_cost = costs + regularized
+    # print(f'{regularized_cost}')
     if file_name == 'hw3_wine.csv':
         if true_pos_1 == 0 and false_pos_1 == 0:
             precision_1 = 0
@@ -207,11 +244,11 @@ def test(weights, data_set, expected_outputs):
             recall_3 = 0
         else:
             recall_3 = true_pos_3/(true_pos_3 + false_neg_3)
-        testing_accuracy = (true_pos_1 + true_pos_2 + true_pos_3)/len(data_set)
+        testing_accuracy = (true_pos_1 + true_pos_2 + true_pos_3)/len(testing_set)
         testing_precision = (precision_1 + precision_2 + precision_3)/3
         testing_recall = (recall_1 + recall_2 + recall_3)/3
     else:
-        testing_accuracy = (true_pos + true_neg)/len(data_set)
+        testing_accuracy = (true_pos + true_neg)/len(testing_set)
         if true_pos == 0 and false_pos == 0:
             testing_precision = 0
         else:

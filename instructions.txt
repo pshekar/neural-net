@@ -1,0 +1,10 @@
+To run the program, simply run
+
+"python3 neural_net.py"
+
+To change values of the hyperparamters, they are set at the very bottom of the file, lines 472-494. 
+To run the backprop_examples, uncomment the lines 474-476 for example 1 and 480-482 for example 2.
+To test with different data sets, at the very top of the file simply comment out one file name and uncomment the other. 
+Along with that, at the bottom of the file uncomment the relevant net_shape for the data set being tested.
+To test the regularized cost of the program, set k_folds=1 at line 486 and uncomment the lines 44-46, 49-52, and 224.
+Currently, the data set is running the house votes data set with 10 folds and a regularization parameter of 0.

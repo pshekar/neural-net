@@ -217,7 +217,15 @@ The two benchmark files we provide (\emph{backprop\_example1.txt} and \emph{back
     \item After identifying the best neural network architecture for each one of the datasets, train it once again on the corresponding dataset and create a learning curve where the $y$ axis shows the network's performance ($J$) on a test set, and where the $x$ axis indicates the number of training samples given to the network. This graph intuitively represents something like this: after showing 5 training examples to the network, what is its performance $J$ on the test set? After showing 10 training examples to the network, what is its performance $J$ on the test set? If the network's parameters and architecture are well-adjusted, this graph should indicate that the network's performance improves as the number of training examples grows; in particular, that $J$ \textit{decreases} as a function of the number of training instances presented to the network. Please also report the step size value, $\alpha$, you used when training this network. \\
     
     
-\HIGHLIGHT{}    
+\HIGHLIGHT{The architecture I trained the data on was with 3 hidden layers and 8 neurons per layer. The trend I noticed as the number of instances increased was that the regularized cost decreased, approaching close to 0 and evening out towards the end of each of the data sets. When doing these calculations, I set the regularization to 0 and the step size to 1 as I got the most consistent results with those values.}   \\
+
+\HIGHLIGHT{The following table is the trend of the cost function for the house votes data:} \\
+
+\includegraphics[scale=.75]{House Votes.png} \\
+
+\HIGHLIGHT{The following table is the trend of the cost function for the wine data:} \\
+
+\includegraphics[scale=.75]{Wine Data.png} \\
     
 
     \item Although this last step/task is not required, we recommend that you train the network using the mini-batch gradient descent approach. You can manually select and adjust the mini-batch size that you would like to use. Training a neural network in this way significantly accelerates the training process.
@@ -241,10 +249,13 @@ The two benchmark files we provide (\emph{backprop\_example1.txt} and \emph{back
 \textbf{There are four ways in which we may receive extra credit in this homework.}
 
 \noindent \HIGHLIGHT{(Extra Points \#1: 13 Points)} 
-Implement the vectorized form of backpropagation. As previously mentioned, this is not mandatory, but you can get extra credit if you do it. Most modern implementations of neural networks use vectorization, so it is useful for you to familiarize yourself with this type of approach. 
+Implement the vectorized form of backpropagation. As previously mentioned, this is not mandatory, but you can get extra credit if you do it. Most modern implementations of neural networks use vectorization, so it is useful for you to familiarize yourself with this type of approach. \\
+
+\HIGHLIGHT{The backpropagation that I implemented uses the vectorized form.} \\
+
 
 \noindent \HIGHLIGHT{(Extra Points \#2: 13 Points)} 
-Analyze a third dataset: the \textbf{Breast Cancer Dataset}. The goal, here, is to classify whether tissue removed via a biopsy indicates whether a person may or may not have breast cancer. There are 699 instances in this dataset. Each instance is described by 9 \textit{numerical} attributes, and there are 2 classes. You should present the same analyses and graphs as discussed above. This dataset can be found in the same zip file as the two main datasets.
+Analyze a third dataset: the \textbf{Breast Cancer Dataset}. The goal, here, is to classify whether tissue removed via a biopsy indicates whether a person may or may not have breast cancer. There are 699 instances in this dataset. Each instance is described by 9 \textit{numerical} attributes, and there are 2 classes. You should present the same analyses and graphs as discussed above. This dataset can be found in the same zip file as the two main datasets. \\
 
 \HIGHLIGHT{The table for the cancer data is presented below:}
 
@@ -265,6 +276,14 @@ Analyze a third dataset: the \textbf{Breast Cancer Dataset}. The goal, here, is 
 4 & 16 & 0.25 & 0.9669747899 & 0.9746223514 \\
 \hline
 \end{tabular} \\
+
+\HIGHLIGHT{Similar to the other two data sets, the stopping criterion I used was a predefined 500 iterations. Also, similar to the other data sets, The best results were found with 2-3 layers and 8 neurons per layer. The regularization parameter again didn't seem to have much of an impact on the results of the tests I ran, again probably due to the small number of attributes we are testing with.} \\
+
+\HIGHLIGHT{The architecture I chose as the best for this neural net is again 3 layers with 8 neurons per layer. The trend was similar again to the previous two data sets, with the regularized cost decreasing as the number of instances increased. Similarly, I set the regularization parameter to 0 and the step size to 1 as I got the best results with those values. The graph of the resulting cost data is below:} \\
+
+\includegraphics[scale=.75]{Cancer Data.png} \\
+
+\HIGHLIGHT{After around 300 instances, the regularized cost seems to even out very close to 0 and stay low for any increase in training samples.} \\
 
 
 
